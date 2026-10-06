@@ -34,4 +34,27 @@ public class PrefixTree
         return true;
     }
 
+    public List<string> GetAllWords()
+    {
+        return GetAllWords(this.Root, new(), []);
+    }
+
+    private List<string> GetAllWords(Node curr, StringBuilder builder, List<string> words)
+    {
+        if (curr.IsWord) 
+        {
+            words  .Add(builder.ToString());
+            builder.Clear();
+        }
+
+        foreach (var child in curr.Children)
+        {
+            builder.Append(child.Key);
+
+            GetAllWords(child.Value, builder, words);
+        }
+
+        return words;
+    }
+
 }
