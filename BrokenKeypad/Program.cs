@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace BrokenKeypad;
 
@@ -27,9 +28,11 @@ public static class Program
     
     private static class Runtimes
     {
-        public static long DictionaryCreationTime { get; set; } = -1;
-        public static long SearchTime             { get; set; } = -1;
-        public static long PrintAllWordsTime      { get; set; } = -1;
+        public static long DictionaryCreationTime   = -1;
+        public static long SearchTime               = -1;
+        public static long GetAllWordsTime          = -1;
+        public static long PrintAllWordsTime        = -1;
+
     }
 
     public static void Main(string[] args)
@@ -44,7 +47,8 @@ public static class Program
         Console.WriteLine();
         Console.WriteLine($"Attempting to build dictionary from {Settings.DictionaryFilepath}");
 
-        IWordBank dictionary;
+        IWordBank    dictionary;
+        List<string> allWords;
 
         try
         {
@@ -54,8 +58,6 @@ public static class Program
 
             stopwatch.Stop();
             Runtimes.DictionaryCreationTime = stopwatch.ElapsedMilliseconds;
-
-            Console.WriteLine($"{Settings.DictionaryType} Dictionary built successfully");
         }
         catch (Exception caught)
         {
@@ -71,12 +73,23 @@ public static class Program
             return;
         }
 
+        // Get All Words From Dictionary
+        stopwatch.Start();
+
+        allWords = dictionary.GetAllWords();
+
+        stopwatch.Stop();
+        Runtimes.GetAllWordsTime = stopwatch.ElapsedMilliseconds;
+
+        Console.WriteLine($"{Settings.DictionaryType} Dictionary built successfully with " +
+            $"{allWords.Count:N0} word{((allWords.Count == 1) ? "" : "s")}");
+
         // Print Dictionary
         if (Settings.PrintDictionary is true)
         {
             stopwatch.Restart();
 
-            PrintDictionary(dictionary);
+            PrintDictionary(allWords);
 
             stopwatch.Stop();
             Runtimes.PrintAllWordsTime = stopwatch.ElapsedMilliseconds;
@@ -191,7 +204,7 @@ public static class Program
 
         foreach (var line in file)
         {
-            _ = wordBank.Insert(line.Split(',')[0]);
+            _ = wordBank.Insert(line.Split(',')[0].ToLower());
         }
 
         return wordBank;
@@ -200,15 +213,23 @@ public static class Program
     /// <summary>
     /// Prints all the words in the given dictionary
     /// </summary>
-    private static void PrintDictionary(IWordBank dictionary)
+    private static void PrintDictionary(List<string> allWords)
     {
-        var allWords = dictionary.GetAllWords();
-
         Console.WriteLine();
         Console.WriteLine("Words:");
         Console.WriteLine();
-        Console.WriteLine(string.Join(',', allWords));
-        Console.WriteLine();
+
+        IEnumerable<string> wordsGroupedByLetter = allWords
+            .GroupBy(word => word[0])
+            .Select(group => string.Join(',', group));
+
+        foreach (string group in wordsGroupedByLetter)
+        {
+            Console.Write($"{group[0]} - ");
+            Console.WriteLine(group);
+            Console.WriteLine();
+        }
+
         Console.WriteLine($"Dictionary Type:     {Settings.DictionaryType}");
         Console.WriteLine($"Dictionary Filepath: {Settings.DictionaryFilepath}");
         Console.WriteLine($"Word Count:          {allWords.Count:N0}");
@@ -229,7 +250,10 @@ public static class Program
         Console.WriteLine($"Build Dictionary - {((Runtimes.DictionaryCreationTime == -1) 
             ? defaultTime : Runtimes.DictionaryCreationTime)}");
 
-        Console.WriteLine($"Print All Words  - {((Runtimes.PrintAllWordsTime == -1) 
+        Console.WriteLine($"Get All Words    - {((Runtimes.GetAllWordsTime == -1) 
+            ? defaultTime : Runtimes.GetAllWordsTime)}");
+
+        Console.WriteLine($"Print All Words  - {((Runtimes.PrintAllWordsTime == -1)
             ? defaultTime : Runtimes.PrintAllWordsTime)}");
 
         Console.WriteLine($"Search           - {((Runtimes.SearchTime == -1) 
