@@ -4,7 +4,7 @@ using System.Text;
 
 namespace BrokenKeypad;
 
-public class PrefixTree
+public class PrefixTree : IWordBank
 {
     private class Node()
     {
@@ -57,4 +57,8 @@ public class PrefixTree
         return words;
     }
 
+    public bool FindWord(string word)
+    {
+        throw new NotImplementedException("PrefixTree: FindWord hasn't been implemented");
+    }
 }
