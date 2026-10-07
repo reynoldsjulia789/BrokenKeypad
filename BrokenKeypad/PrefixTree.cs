@@ -59,6 +59,19 @@ public class PrefixTree : IWordBank
 
     public bool FindWord(string word)
     {
-        throw new NotImplementedException("PrefixTree: FindWord hasn't been implemented");
+        return FindWord(this.Root, word, 0);
+    }
+
+    private bool FindWord(Node curr, string word, int charIdx)
+    {
+        if (charIdx >= word.Length) return false;
+
+        _ = curr.Children.TryGetValue(word[charIdx], out Node? child);
+
+        if ((child is not null) && (charIdx == (word.Length - 1))) return true;
+
+        if (child is null) return false;
+
+        return FindWord(child, word, charIdx + 1);
     }
 }
