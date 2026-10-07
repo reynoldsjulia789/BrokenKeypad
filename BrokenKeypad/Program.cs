@@ -1,22 +1,16 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace BrokenKeypad;
 
 public static class Program
 {
-    private enum Mode
-    {
-        ExhaustiveSearch,
-        BranchAndBound
-    }
+    private enum Mode { ExhaustiveSearch, BranchAndBound }
 
-    private enum DictionaryType
-    {
-        HashTable,
-        PrefixTree
-    }
+    private enum DictionaryType { HashTable, PrefixTree }
 
     private static class Settings
     {
@@ -114,15 +108,30 @@ public static class Program
         Console.WriteLine("To run:");
         Console.WriteLine("dotnet run [--filepath <path to dictionary file>] [--mode <search mode>] " +
             "[--dictionary-type <type>] [--print-dictionary]");
+
         Console.WriteLine($"* all args are optional");
+
         Console.WriteLine($"* filepath: path to .txt file containing the dictionary to use to verify word validity.");
         Console.WriteLine($"  default is {Settings.DictionaryFilepath}");
+
         Console.WriteLine($"* mode: the mode used to lookup words.");
-        Console.WriteLine($"  options include: exhaustive-search, branch-and-bound");
-        Console.WriteLine($"  default is {Settings.SearchMode}");
+
+        string[] options = Enum.GetNames(typeof(Mode))
+            .Select(option => ToKebabCase(option))
+            .ToArray();
+
+        Console.WriteLine($"  options include: {string.Join(", ", options)}");
+        Console.WriteLine($"  default is {ToKebabCase(Settings.SearchMode.ToString())}");
+
         Console.WriteLine($"* dictionary-type: the data structure used to store the dictionary.");
-        Console.WriteLine($"  options include: prefix-tree, hash-table");
-        Console.WriteLine($"  default is {Settings.DictionaryType}");
+
+        options = Enum.GetNames(typeof(DictionaryType))
+            .Select(option => ToKebabCase(option))
+            .ToArray();
+
+        Console.WriteLine($"  options include: {string.Join(", ", options)}");
+        Console.WriteLine($"  default is {ToKebabCase(Settings.DictionaryType.ToString())}");
+
         Console.WriteLine($"* print-dictionary: if included, all the words in the dictionary being used will be " +
             $"printed to the console");
 
@@ -221,11 +230,14 @@ public static class Program
 
         IEnumerable<string> wordsGroupedByLetter = allWords
             .GroupBy(word => word[0])
-            .Select(group => string.Join(',', group));
+            .Select(group => string.Join(", ", group));
 
         foreach (string group in wordsGroupedByLetter)
         {
-            Console.Write($"{group[0]} - ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write($"{group[0]}: ");
+            Console.ResetColor();
+
             Console.WriteLine(group);
             Console.WriteLine();
         }
@@ -258,5 +270,15 @@ public static class Program
 
         Console.WriteLine($"Search           - {((Runtimes.SearchTime == -1) 
             ? defaultTime : Runtimes.SearchTime)}");
+    }
+
+    /// <summary>
+    /// Converts a string from PascalCase to kebab-case
+    /// </summary>
+    private static string ToKebabCase(string PascalCase)
+    {
+        if (string.IsNullOrEmpty(PascalCase)) return PascalCase;
+
+        return JsonNamingPolicy.KebabCaseLower.ConvertName(PascalCase);
     }
 }
