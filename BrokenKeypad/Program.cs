@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace BrokenKeypad;
 
@@ -34,10 +35,12 @@ public static class Program
     public static void Main(string[] args)
     {
         // Setup
+        PrintRunInstructions();
         ParseArgs(args);
+
         Stopwatch stopwatch = new();
 
-        // Read dictionary
+        // Read Dictionary
         Console.WriteLine();
         Console.WriteLine($"Attempting to build dictionary from {Settings.DictionaryFilepath}");
 
@@ -81,6 +84,33 @@ public static class Program
         
 
         // Search
+    }
+
+    /// <summary>
+    /// Prints the instructions on how to run the program.
+    /// Should be called before any args are parsed, since it prints the default settings.
+    /// </summary>
+    private static void PrintRunInstructions()
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+
+        Console.WriteLine();
+        Console.WriteLine("To run:");
+        Console.WriteLine("dotnet run [--filepath <path to dictionary file>] [--mode <search mode>] " +
+            "[--dictionary-type <type>] [--print-dictionary]");
+        Console.WriteLine($"* all args are optional");
+        Console.WriteLine($"* filepath: path to .txt file containing the dictionary to use to verify word validity.");
+        Console.WriteLine($"  default is {Settings.DictionaryFilepath}");
+        Console.WriteLine($"* mode: the mode used to lookup words.");
+        Console.WriteLine($"  options include: exhaustive-search, branch-and-bound");
+        Console.WriteLine($"  default is {Settings.SearchMode}");
+        Console.WriteLine($"* dictionary-type: the data structure used to store the dictionary.");
+        Console.WriteLine($"  options include: prefix-tree, hash-table");
+        Console.WriteLine($"  default is {Settings.DictionaryType}");
+        Console.WriteLine($"* print-dictionary: if included, all the words in the dictionary being used will be " +
+            $"printed to the console");
+
+        Console.ResetColor();
     }
 
     /// <summary>
