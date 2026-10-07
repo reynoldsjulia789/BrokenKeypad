@@ -27,9 +27,9 @@ public static class Program
     
     private static class Runtimes
     {
-        public static long WordBankTime      { get; set; } = -1;
-        public static long SearchTime        { get; set; } = -1;
-        public static long PrintAllWordsTime { get; set; } = -1;
+        public static long DictionaryCreationTime { get; set; } = -1;
+        public static long SearchTime             { get; set; } = -1;
+        public static long PrintAllWordsTime      { get; set; } = -1;
     }
 
     public static void Main(string[] args)
@@ -53,7 +53,7 @@ public static class Program
             dictionary = BuildDictionary();
 
             stopwatch.Stop();
-            Runtimes.WordBankTime = stopwatch.ElapsedMilliseconds;
+            Runtimes.DictionaryCreationTime = stopwatch.ElapsedMilliseconds;
 
             Console.WriteLine($"{Settings.DictionaryType} Dictionary built successfully");
         }
@@ -81,9 +81,12 @@ public static class Program
             stopwatch.Stop();
             Runtimes.PrintAllWordsTime = stopwatch.ElapsedMilliseconds;
         }
-        
+
 
         // Search
+
+        // Print Run Times
+        PrintRuntimes();
     }
 
     /// <summary>
@@ -199,12 +202,37 @@ public static class Program
     /// </summary>
     private static void PrintDictionary(IWordBank dictionary)
     {
-        var allWords = string.Join(',', dictionary.GetAllWords());
+        var allWords = dictionary.GetAllWords();
 
+        Console.WriteLine();
+        Console.WriteLine("Words:");
+        Console.WriteLine();
+        Console.WriteLine(string.Join(',', allWords));
         Console.WriteLine();
         Console.WriteLine($"Dictionary Type:     {Settings.DictionaryType}");
         Console.WriteLine($"Dictionary Filepath: {Settings.DictionaryFilepath}");
-        Console.WriteLine(allWords);
+        Console.WriteLine($"Word Count:          {allWords.Count:N0}");
+    }
+
+    /// <summary>
+    /// Prints available .NET runtimes and their version information to the console.
+    /// </summary>
+    /// <remarks>Writes runtime identifiers and version details in a human-readable form to standard output
+    /// for diagnostic purposes.</remarks>
+    private static void PrintRuntimes()
+    {
+        string defaultTime = "Not Recorded";
+
         Console.WriteLine();
+        Console.WriteLine("Runtimes in ms:");
+
+        Console.WriteLine($"Build Dictionary - {((Runtimes.DictionaryCreationTime == -1) 
+            ? defaultTime : Runtimes.DictionaryCreationTime)}");
+
+        Console.WriteLine($"Print All Words  - {((Runtimes.PrintAllWordsTime == -1) 
+            ? defaultTime : Runtimes.PrintAllWordsTime)}");
+
+        Console.WriteLine($"Search           - {((Runtimes.SearchTime == -1) 
+            ? defaultTime : Runtimes.SearchTime)}");
     }
 }

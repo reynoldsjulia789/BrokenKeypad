@@ -43,8 +43,7 @@ public class PrefixTree : IWordBank
     {
         if (curr.IsWord) 
         {
-            words  .Add(builder.ToString());
-            builder.Clear();
+            words.Add(builder.ToString());
         }
 
         foreach (var child in curr.Children)
@@ -52,6 +51,8 @@ public class PrefixTree : IWordBank
             builder.Append(child.Key);
 
             GetAllWords(child.Value, builder, words);
+
+            builder.Length--;
         }
 
         return words;
