@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
@@ -91,6 +92,15 @@ public static class Program
 
 
         // Search
+        while (true)
+        {
+            List<int> input = GetUserInput();
+
+            // TODO: search for possible words and return results,
+            // alter Runtimes class to store multiple search times and ensure runtime printing prints all
+
+            if (UserHasMoreInputs() is false) break;
+        }
 
         // Print Run Times
         PrintRuntimes();
@@ -249,6 +259,90 @@ public static class Program
         Console.WriteLine($"Dictionary Type:     {Settings.DictionaryType}");
         Console.WriteLine($"Dictionary Filepath: {Settings.DictionaryFilepath}");
         Console.WriteLine($"Word Count:          {allWords.Count:N0}");
+    }
+
+
+    /// <summary>
+    /// Reads integers entered by the user and returns them as a list.
+    /// </summary>
+    /// <returns>A list of integers entered by the user. Returns an empty list if no valid integers were provided.</returns>
+    private static List<int> GetUserInput()
+    {
+        List<int> input = [];
+
+        Console.WriteLine();
+        Console.WriteLine("The following numbers correspond to the following letters.");
+        Console.WriteLine("* 2 = A, B, or C");
+        Console.WriteLine("* 3 = D, E, or F");
+        Console.WriteLine("* 4 = G, H, or I");
+        Console.WriteLine("* 5 = J, K, or L");
+        Console.WriteLine("* 6 = M, N, or O");
+        Console.WriteLine("* 7 = P, Q, R, or S");
+        Console.WriteLine("* 8 = T, U, or V");
+        Console.WriteLine("* 9 = W, X, Y, Z");
+
+        while (true)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Please enter a sequence of numbers to represent a word:");
+            Console.WriteLine("For example: the sequence 228 could represent act, bat, or cat");
+            Console.Write(">  ");
+
+            var rawInput   = Console.ReadLine()?.Trim();
+            var errorMsg   = "Invalid input. Please only enter didgits 2-9";
+            var validInput = true;
+
+            if (string.IsNullOrWhiteSpace(rawInput))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(errorMsg);
+                Console.ResetColor();
+
+                continue;
+            }
+
+            foreach (char character in rawInput)
+            {
+                if ((int.TryParse(character.ToString(), out int num) is false) || (num < 2) || (num > 9))
+                {
+                    input.Clear();
+
+                    validInput = false;
+
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(errorMsg);
+                    Console.ResetColor();
+
+                    break;
+                }
+
+                input.Add(num);
+            }
+
+            if (validInput is true) return input;
+        }
+    }
+
+    /// <summary>
+    /// Determines wheter the user has more sequences of numbers they would like to process
+    /// </summary>
+    /// <returns>true to continue, false to exit</returns>
+    private static bool UserHasMoreInputs()
+    {
+        while (true)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Would you like to input another sequence? (y/n)");
+            Console.Write(">  ");
+
+            var rawInput = Console.ReadLine()?.Trim();
+
+            if (string.IsNullOrWhiteSpace(rawInput)) continue;
+
+            if (rawInput[0] == 'y' || rawInput[0] == 'Y') return true;
+
+            return false;
+        }
     }
 
     /// <summary>
