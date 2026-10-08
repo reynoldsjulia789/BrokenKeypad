@@ -1,6 +1,6 @@
 # Broken Keypad
 
-<img align="left" src="./KeypadImage.png" alt="keypad image" width=13%>
+<img align="left" src="./KeypadImage.png" alt="keypad image" width="130px">
 
 **Premise:**
 
