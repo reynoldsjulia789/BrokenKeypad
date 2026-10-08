@@ -10,7 +10,7 @@ public static class Program
 {
     private enum Mode { ExhaustiveSearch, BranchAndBound }
 
-    private enum DictionaryType { HashTable, PrefixTree }
+    private enum DictionaryType { Hash, PrefixTree }
 
     private static class Settings
     {
@@ -180,9 +180,9 @@ public static class Program
                     Settings.DictionaryType = DictionaryType.PrefixTree;
                 }
 
-                if (args[idx + 1] == "hash-table")
+                if (args[idx + 1] == "hash")
                 {
-                    Settings.DictionaryType = DictionaryType.HashTable;
+                    Settings.DictionaryType = DictionaryType.Hash;
                 }
             }
 
@@ -202,6 +202,10 @@ public static class Program
         if (Settings.DictionaryType == DictionaryType.PrefixTree)
         {
             wordBank = new PrefixTree();
+        }
+        else if (Settings.DictionaryType == DictionaryType.Hash)
+        {
+            wordBank = new Hash();
         }
         else
         {
