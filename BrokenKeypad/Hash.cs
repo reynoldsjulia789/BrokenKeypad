@@ -4,7 +4,7 @@ using System.Text;
 
 namespace BrokenKeypad;
 
-internal class Hashing : IWordBank
+internal class Hash : IWordBank
 {
     private readonly HashSet<string> hashSet = [];
 
