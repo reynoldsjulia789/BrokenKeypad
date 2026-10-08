@@ -91,6 +91,15 @@ public static class Program
 
 
         // Search
+        while (true)
+        {
+            List<int> input = GetUserInput();
+
+            // TODO: search for possible words and return results,
+            // alter Runtimes class to store multiple search times and ensure runtime printing prints all
+
+            if (UserHasMoreInputs() is false) break;
+        }
 
         // Print Run Times
         PrintRuntimes();
@@ -249,6 +258,27 @@ public static class Program
         Console.WriteLine($"Dictionary Type:     {Settings.DictionaryType}");
         Console.WriteLine($"Dictionary Filepath: {Settings.DictionaryFilepath}");
         Console.WriteLine($"Word Count:          {allWords.Count:N0}");
+    }
+
+
+    /// <summary>
+    /// Reads integers entered by the user and returns them as a list.
+    /// </summary>
+    /// <returns>A list of integers entered by the user. Returns an empty list if no valid integers were provided.</returns>
+    private static List<int> GetUserInput()
+    {
+        List<int> input = [];
+
+        return input;
+    }
+
+    /// <summary>
+    /// Determines wheter the user has more sequences of numbers they would like to process
+    /// </summary>
+    /// <returns>true to continue, false to exit</returns>
+    private static bool UserHasMoreInputs()
+    {
+        return false;
     }
 
     /// <summary>
