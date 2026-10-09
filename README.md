@@ -22,9 +22,6 @@ For example, "228" would output "cat, bat, act."
     * `--mode`: the mode used to lookup words
         * options include: `exhaustive-search`, `branch-and-bound`
         * default is `branch-and-bound`
-    * `--dictionary-type`: the data structure used to store the dictionary
-        * options include: `hash`, `prefix-tree`
-        * default is `prefix-tree`
     * `--print-dictionary`: if included, all the words in the dictionary being used will be printed to the console
 
 **Visual Studio:**
