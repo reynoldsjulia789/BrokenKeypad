@@ -81,6 +81,47 @@ public class PrefixTree : IWordBank
     /// </summary>
     public List<string> GetPossibleWords(List<int> numbers, Dictionary<int, List<char>> intCharMap)
     {
-        return ["PrefixTree.GetPossibleWords: Branch and Bound search not yet implemented"];
+        return BranchAndBound(this.Root, numbers, 0, new(), intCharMap, []);
+    }
+
+    /// <summary>
+    /// Uses branch and bound to search for possible words given a sequence of ints and their corresponding chars.
+    /// Prunes branches with no chance to go any further to give more efficient searching than exhaustive search.
+    /// </summary>
+    /// <param name="curr">current node to evaluate</param>
+    /// <param name="numbers">the sequence of numbers to find matches for</param>
+    /// <param name="currIdx">the index of the numbers list currently being examined</param>
+    /// <param name="builder">builds the word out of characters</param>
+    /// <param name="intCharMap">maps the number to a set of characters</param>
+    /// <param name="results">a list of words that align with the provided sequence of numbers</param>
+    /// <returns>the results</returns>
+    private List<string> BranchAndBound(
+        Node curr,
+        List<int> numbers, 
+        int currIdx,
+        StringBuilder builder,
+        Dictionary<int, List<char>> intCharMap, 
+        List<string> results)
+    {
+        if (currIdx == numbers.Count)
+        {
+            if (curr.IsWord) results.Add(builder.ToString());
+            return results;
+        }
+
+        List<char> possibleChars = intCharMap[numbers[currIdx]];
+
+        foreach (var possibleChar in possibleChars)
+        {
+            if (curr.Children.TryGetValue(possibleChar, out Node? next) is false) continue; 
+
+            builder.Append(possibleChar);
+
+            BranchAndBound(next, numbers, currIdx + 1, builder, intCharMap, results);
+
+            builder.Length--;
+        }
+
+        return results;
     }
 }
