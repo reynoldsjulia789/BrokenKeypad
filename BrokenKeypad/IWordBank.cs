@@ -4,7 +4,7 @@ using System.Text;
 
 namespace BrokenKeypad;
 
-internal interface IWordBank
+public interface IWordBank
 {
     /// <summary>
     /// Inserts a word into the word bank

@@ -19,16 +19,31 @@ public static class Program
         public static Mode SearchMode               = Mode.BranchAndBound;
         public static DictionaryType DictionaryType = DictionaryType.PrefixTree;
         public static bool PrintDictionary          = false;
+        public static Dictionary<int, List<char>> IntCharMap = new()
+        {
+            [2] = [ 'a', 'b', 'c' ],
+            [3] = [ 'd', 'e', 'f' ],
+            [4] = [ 'g', 'h', 'i' ],
+            [5] = [ 'j', 'k', 'l' ],
+            [6] = [ 'm', 'n', 'o' ],
+            [7] = [ 'p', 'q', 'r', 's' ],
+            [8] = [ 't', 'u', 'v' ],
+            [9] = [ 'w', 'x', 'y', 'z' ]
+        };
     }
     
     private static class Runtimes
     {
         public static long DictionaryCreationTime   = -1;
-        public static long SearchTime               = -1;
+        public static List<long> SearchTimes        = [];
         public static long GetAllWordsTime          = -1;
         public static long PrintAllWordsTime        = -1;
 
     }
+
+
+    // ---------- MAIN -----------
+
 
     public static void Main(string[] args)
     {
@@ -90,14 +105,21 @@ public static class Program
             Runtimes.PrintAllWordsTime = stopwatch.ElapsedMilliseconds;
         }
 
-
         // Search
+        ISearch search = GetSearchInstance(dictionary);
+
         while (true)
         {
             List<int> input = GetUserInput();
 
-            // TODO: search for possible words and return results,
-            // alter Runtimes class to store multiple search times and ensure runtime printing prints all
+            stopwatch.Restart();
+
+            List<string> results = search.FindWords(input);
+
+            stopwatch.Stop();
+            Runtimes.SearchTimes.Add(stopwatch.ElapsedMilliseconds);
+
+            PrintResults(results);
 
             if (UserHasMoreInputs() is false) break;
         }
@@ -105,6 +127,10 @@ public static class Program
         // Print Run Times
         PrintRuntimes();
     }
+
+
+    // ---------- ARGS -----------
+
 
     /// <summary>
     /// Prints the instructions on how to run the program.
@@ -179,7 +205,11 @@ public static class Program
             idx++; // skip idx + 1 since already seen
         }
     }
-    
+
+
+    // ---------- DICTIONARY -----------
+
+
     /// <summary>
     /// Builds a dictionary of words from the filepath specified in settings
     /// </summary>
@@ -242,6 +272,9 @@ public static class Program
     }
 
 
+    // ---------- USER INPUT -----------
+
+
     /// <summary>
     /// Reads integers entered by the user and returns them as a list.
     /// </summary>
@@ -250,16 +283,16 @@ public static class Program
     {
         List<int> input = [];
 
+        int low  = Settings.IntCharMap.Keys.Min();
+        int high = Settings.IntCharMap.Keys.Max();
+
         Console.WriteLine();
         Console.WriteLine("The following numbers correspond to the following letters.");
-        Console.WriteLine("* 2 = A, B, or C");
-        Console.WriteLine("* 3 = D, E, or F");
-        Console.WriteLine("* 4 = G, H, or I");
-        Console.WriteLine("* 5 = J, K, or L");
-        Console.WriteLine("* 6 = M, N, or O");
-        Console.WriteLine("* 7 = P, Q, R, or S");
-        Console.WriteLine("* 8 = T, U, or V");
-        Console.WriteLine("* 9 = W, X, Y, Z");
+
+        foreach (var mapping in Settings.IntCharMap)
+        {
+            Console.WriteLine($"* {mapping.Key} = {string.Join(", ", mapping.Value)}");
+        }
 
         while (true)
         {
@@ -269,7 +302,7 @@ public static class Program
             Console.Write(">  ");
 
             var rawInput   = Console.ReadLine()?.Trim();
-            var errorMsg   = "Invalid input. Please only enter didgits 2-9";
+            var errorMsg   = $"Invalid input. Please only enter didgits {low}-{high}";
             var validInput = true;
 
             if (string.IsNullOrWhiteSpace(rawInput))
@@ -283,7 +316,7 @@ public static class Program
 
             foreach (char character in rawInput)
             {
-                if ((int.TryParse(character.ToString(), out int num) is false) || (num < 2) || (num > 9))
+                if ((int.TryParse(character.ToString(), out int num) is false) || (num < low) || (num > high))
                 {
                     input.Clear();
 
@@ -325,6 +358,45 @@ public static class Program
         }
     }
 
+
+    // ---------- OTHER -----------
+
+    /// <summary>
+    /// Retunrs the search instance using run settings
+    /// </summary>
+    /// <param name="dictionary">the dictionary to use in the search</param>
+    /// <returns>ISearch interface with appropriate type</returns>
+    /// <exception cref="NotImplementedException">Thrown if a setting is called for that isn't implemented</exception>
+    private static ISearch GetSearchInstance(IWordBank dictionary)
+    {
+        if (Settings.SearchMode == Mode.ExhaustiveSearch)
+        {
+            return new ExhaustiveSearch(Settings.IntCharMap, dictionary);
+        }
+        else if (Settings.SearchMode == Mode.BranchAndBound)
+        {
+            return new BranchAndBound(Settings.IntCharMap, dictionary);
+        }
+        else
+        {
+            throw new NotImplementedException(
+                $"Program.BuildDictionary: {Settings.DictionaryType} has not been implemented yet");
+        }
+    }
+
+    /// <summary>
+    /// Prints the results of a search
+    /// </summary>
+    private static void PrintResults(List<string> results)
+    {
+        Console.ForegroundColor = ConsoleColor.Green;
+
+        Console.WriteLine();
+        Console.WriteLine($"Possible words: {string.Join(", ", results)}");
+
+        Console.ResetColor();
+    }
+
     /// <summary>
     /// Prints available .NET runtimes and their version information to the console.
     /// </summary>
@@ -346,8 +418,8 @@ public static class Program
         Console.WriteLine($"Print All Words  - {((Runtimes.PrintAllWordsTime == -1)
             ? defaultTime : Runtimes.PrintAllWordsTime)}");
 
-        Console.WriteLine($"Search           - {((Runtimes.SearchTime == -1) 
-            ? defaultTime : Runtimes.SearchTime)}");
+        Console.WriteLine($"Search           - {((Runtimes.SearchTimes.Count == 0) 
+            ? defaultTime : string.Join(", ", Runtimes.SearchTimes))}");
     }
 
     /// <summary>
