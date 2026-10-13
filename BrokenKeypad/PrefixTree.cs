@@ -84,6 +84,17 @@ public class PrefixTree : IWordBank
         return BranchAndBound(this.Root, numbers, 0, new(), intCharMap, []);
     }
 
+    /// <summary>
+    /// Uses branch and bound to search for possible words given a sequence of ints and their corresponding chars.
+    /// Prunes branches with no chance to go any further to give more efficient searching than exhaustive search.
+    /// </summary>
+    /// <param name="curr">current node to evaluate</param>
+    /// <param name="numbers">the sequence of numbers to find matches for</param>
+    /// <param name="currIdx">the index of the numbers list currently being examined</param>
+    /// <param name="builder">builds the word out of characters</param>
+    /// <param name="intCharMap">maps the number to a set of characters</param>
+    /// <param name="results">a list of words that align with the provided sequence of numbers</param>
+    /// <returns>the results</returns>
     private List<string> BranchAndBound(
         Node curr,
         List<int> numbers, 
