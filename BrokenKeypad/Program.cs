@@ -30,10 +30,10 @@ public static class Program
     
     private static class Runtimes
     {
-        public static long DictionaryCreationTime   = -1;
-        public static List<long> SearchTimes        = [];
-        public static long GetAllWordsTime          = -1;
-        public static long PrintAllWordsTime        = -1;
+        public static double? DictionaryCreationTime     = null;
+        public static List<double?> SearchTimes          = [];
+        public static double? GetAllWordsTime            = null;
+        public static double? PrintAllWordsTime          = null;
 
     }
 
@@ -63,7 +63,7 @@ public static class Program
             dictionary = BuildDictionary();
 
             stopwatch.Stop();
-            Runtimes.DictionaryCreationTime = stopwatch.ElapsedMilliseconds;
+            Runtimes.DictionaryCreationTime = stopwatch.Elapsed.TotalNanoseconds;
         }
         catch (Exception caught)
         {
@@ -85,7 +85,7 @@ public static class Program
         allWords = dictionary.GetAllWords();
 
         stopwatch.Stop();
-        Runtimes.GetAllWordsTime = stopwatch.ElapsedMilliseconds;
+        Runtimes.GetAllWordsTime = stopwatch.Elapsed.TotalNanoseconds;
 
         Console.WriteLine($"{Settings.DictionaryType} Dictionary built successfully with " +
             $"{allWords.Count:N0} word{((allWords.Count == 1) ? "" : "s")}");
@@ -98,7 +98,7 @@ public static class Program
             PrintDictionary(allWords);
 
             stopwatch.Stop();
-            Runtimes.PrintAllWordsTime = stopwatch.ElapsedMilliseconds;
+            Runtimes.PrintAllWordsTime = stopwatch.Elapsed.TotalNanoseconds;
         }
 
         // Search
@@ -111,7 +111,7 @@ public static class Program
             List<string> results = dictionary.GetPossibleWords(input, Settings.IntCharMap);
 
             stopwatch.Stop();
-            Runtimes.SearchTimes.Add(stopwatch.ElapsedMilliseconds);
+            Runtimes.SearchTimes.Add(stopwatch.Elapsed.TotalNanoseconds);
 
             PrintResults(results);
 
@@ -363,7 +363,9 @@ public static class Program
         Console.ForegroundColor = ConsoleColor.Green;
 
         Console.WriteLine();
-        Console.WriteLine($"Possible words: {string.Join(", ", results)}");
+        Console.WriteLine($"{((results.Count == 0) 
+            ? "No results found" 
+            : $"Possible words: {string.Join(", ", results)}")}");
 
         Console.ResetColor();
     }
@@ -378,15 +380,15 @@ public static class Program
         string defaultTime = "Not Recorded";
 
         Console.WriteLine();
-        Console.WriteLine("Runtimes in ms:");
+        Console.WriteLine("Runtimes in nanoseconds:");
 
-        Console.WriteLine($"Build Dictionary - {((Runtimes.DictionaryCreationTime == -1) 
+        Console.WriteLine($"Build Dictionary - {((Runtimes.DictionaryCreationTime is null) 
             ? defaultTime : Runtimes.DictionaryCreationTime)}");
 
-        Console.WriteLine($"Get All Words    - {((Runtimes.GetAllWordsTime == -1) 
+        Console.WriteLine($"Get All Words    - {((Runtimes.GetAllWordsTime is null) 
             ? defaultTime : Runtimes.GetAllWordsTime)}");
 
-        Console.WriteLine($"Print All Words  - {((Runtimes.PrintAllWordsTime == -1)
+        Console.WriteLine($"Print All Words  - {((Runtimes.PrintAllWordsTime is null)
             ? defaultTime : Runtimes.PrintAllWordsTime)}");
 
         Console.WriteLine($"Search           - {((Runtimes.SearchTimes.Count == 0) 
