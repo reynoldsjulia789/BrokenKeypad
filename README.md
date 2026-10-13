@@ -15,13 +15,14 @@ For example, "228" would output "cat, bat, act."
 
 **Command Line:**
 1) Navigate to the folder containing the `.csproj` file (currently, it is in the inner "BrokenKeypad" folder)
-2) Run the following command with your desired configuration: `dotnet run [--filepath <path to dictionary file>] [--mode <search mode>] [--dictionary-type <type>] [--print-dictionary]`
+2) Run the following command with your desired configuration: `dotnet run [--filepath <path to dictionary file>] [--mode <search mode>] [--print-dictionary]`
     * all args are optional
     * `--filepath`: path to `.txt` file containing the dictionary to use to verify word validity
         * default is `../dictionary.txt`
     * `--mode`: the mode used to lookup words
         * options include: `exhaustive-search`, `branch-and-bound`
         * default is `branch-and-bound`
+        * `branch-and-bound` uses a prefix-tree, `exhaustive-search` uses hashing
     * `--print-dictionary`: if included, all the words in the dictionary being used will be printed to the console
 
 **Visual Studio:**
