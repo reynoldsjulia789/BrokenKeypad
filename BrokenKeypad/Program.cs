@@ -383,16 +383,16 @@ public static class Program
         Console.WriteLine("Runtimes in nanoseconds:");
 
         Console.WriteLine($"Build Dictionary - {((Runtimes.DictionaryCreationTime is null) 
-            ? defaultTime : Runtimes.DictionaryCreationTime)}");
+            ? defaultTime : $"{Runtimes.DictionaryCreationTime:N0}")}");
 
         Console.WriteLine($"Get All Words    - {((Runtimes.GetAllWordsTime is null) 
-            ? defaultTime : Runtimes.GetAllWordsTime)}");
+            ? defaultTime : $"{Runtimes.GetAllWordsTime:N0}")}");
 
         Console.WriteLine($"Print All Words  - {((Runtimes.PrintAllWordsTime is null)
-            ? defaultTime : Runtimes.PrintAllWordsTime)}");
+            ? defaultTime : $"{Runtimes.PrintAllWordsTime:N0}")}");
 
         Console.WriteLine($"Search           - {((Runtimes.SearchTimes.Count == 0) 
-            ? defaultTime : string.Join(", ", Runtimes.SearchTimes))}");
+            ? defaultTime : string.Join(", ", Runtimes.SearchTimes.Select(number => number?.ToString("N0"))))}");
     }
 
     /// <summary>
