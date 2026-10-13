@@ -1,9 +1,5 @@
 ﻿using System.Diagnostics;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace BrokenKeypad;
 
@@ -106,15 +102,13 @@ public static class Program
         }
 
         // Search
-        ISearch search = GetSearchInstance(dictionary);
-
         while (true)
         {
             List<int> input = GetUserInput();
 
             stopwatch.Restart();
 
-            List<string> results = search.FindWords(input);
+            List<string> results = dictionary.GetPossibleWords(input, Settings.IntCharMap);
 
             stopwatch.Stop();
             Runtimes.SearchTimes.Add(stopwatch.ElapsedMilliseconds);
@@ -360,29 +354,6 @@ public static class Program
 
 
     // ---------- OTHER -----------
-
-    /// <summary>
-    /// Retunrs the search instance using run settings
-    /// </summary>
-    /// <param name="dictionary">the dictionary to use in the search</param>
-    /// <returns>ISearch interface with appropriate type</returns>
-    /// <exception cref="NotImplementedException">Thrown if a setting is called for that isn't implemented</exception>
-    private static ISearch GetSearchInstance(IWordBank dictionary)
-    {
-        if (Settings.SearchMode == Mode.ExhaustiveSearch)
-        {
-            return new ExhaustiveSearch(Settings.IntCharMap, dictionary);
-        }
-        else if (Settings.SearchMode == Mode.BranchAndBound)
-        {
-            return new BranchAndBound(Settings.IntCharMap, dictionary);
-        }
-        else
-        {
-            throw new NotImplementedException(
-                $"Program.BuildDictionary: {Settings.DictionaryType} has not been implemented yet");
-        }
-    }
 
     /// <summary>
     /// Prints the results of a search

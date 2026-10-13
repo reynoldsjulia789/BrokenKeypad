@@ -13,9 +13,18 @@ public class Hash : IWordBank
         return hashSet.Add(word);
     }
 
-    public bool FindWord(string word)
+    public bool WordExists(string word)
     {
         return hashSet.Contains(word);
+    }
+
+    /// <summary>
+    /// Uses exhaustive search to create a list of the possible words given a list of numbers and their
+    /// coresponding possible chars
+    /// </summary>
+    public List<string> GetPossibleWords(List<int> numbers, Dictionary<int, List<char>> intCharMap)
+    {
+        return ["Hash.GetPossibleWords: Exhaustive search not yet implemented"];
     }
 
     public List<string> GetAllWords()
