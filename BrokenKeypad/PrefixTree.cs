@@ -81,6 +81,36 @@ public class PrefixTree : IWordBank
     /// </summary>
     public List<string> GetPossibleWords(List<int> numbers, Dictionary<int, List<char>> intCharMap)
     {
-        return ["PrefixTree.GetPossibleWords: Branch and Bound search not yet implemented"];
+        return BranchAndBound(this.Root, numbers, 0, new(), intCharMap, []);
+    }
+
+    private List<string> BranchAndBound(
+        Node curr,
+        List<int> numbers, 
+        int currIdx,
+        StringBuilder builder,
+        Dictionary<int, List<char>> intCharMap, 
+        List<string> results)
+    {
+        if (currIdx == numbers.Count)
+        {
+            if (curr.IsWord) results.Add(builder.ToString());
+            return results;
+        }
+
+        List<char> possibleChars = intCharMap[numbers[currIdx]];
+
+        foreach (var possibleChar in possibleChars)
+        {
+            if (curr.Children.TryGetValue(possibleChar, out Node? next) is false) continue; 
+
+            builder.Append(possibleChar);
+
+            BranchAndBound(next, numbers, currIdx + 1, builder, intCharMap, results);
+
+            builder.Length--;
+        }
+
+        return results;
     }
 }
