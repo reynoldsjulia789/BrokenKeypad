@@ -58,12 +58,12 @@ public class PrefixTree : IWordBank
         return words;
     }
 
-    public bool FindWord(string word)
+    public bool WordExists(string word)
     {
-        return FindWord(this.Root, word, 0);
+        return WordExists(this.Root, word, 0);
     }
 
-    private bool FindWord(Node curr, string word, int charIdx)
+    private bool WordExists(Node curr, string word, int charIdx)
     {
         if (charIdx >= word.Length) return false;
 
@@ -73,6 +73,14 @@ public class PrefixTree : IWordBank
 
         if (child is null) return false;
 
-        return FindWord(child, word, charIdx + 1);
+        return WordExists(child, word, charIdx + 1);
+    }
+
+    /// <summary>
+    /// Uses Branch and Bound to search for possible words, and returns the results as a list
+    /// </summary>
+    public List<string> GetPossibleWords(List<int> numbers, Dictionary<int, List<char>> intCharMap)
+    {
+        return ["PrefixTree.GetPossibleWords: Branch and Bound search not yet implemented"];
     }
 }
