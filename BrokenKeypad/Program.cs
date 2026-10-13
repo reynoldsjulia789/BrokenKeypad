@@ -133,15 +133,6 @@ public static class Program
         Console.WriteLine($"  options include: {string.Join(", ", options)}");
         Console.WriteLine($"  default is {ToKebabCase(Settings.SearchMode.ToString())}");
 
-        Console.WriteLine($"* dictionary-type: the data structure used to store the dictionary.");
-
-        options = Enum.GetNames(typeof(DictionaryType))
-            .Select(option => ToKebabCase(option))
-            .ToArray();
-
-        Console.WriteLine($"  options include: {string.Join(", ", options)}");
-        Console.WriteLine($"  default is {ToKebabCase(Settings.DictionaryType.ToString())}");
-
         Console.WriteLine($"* print-dictionary: if included, all the words in the dictionary being used will be " +
             $"printed to the console");
 
@@ -172,28 +163,17 @@ public static class Program
             {
                 if (args[idx + 1] == "exhaustive-search")
                 {
-                    Settings.SearchMode = Mode.ExhaustiveSearch;
+                    Settings.SearchMode     = Mode.ExhaustiveSearch;
+                    Settings.DictionaryType = DictionaryType.Hash;
                 }
 
                 if (args[idx + 1] == "branch-and-bound")
                 {
-                    Settings.SearchMode = Mode.BranchAndBound;
-                }
-
-                // add more mode options here
-            }
-
-            if (args[idx] == "--dictionary-type")
-            {
-                if (args[idx + 1] == "prefix-tree")
-                {
+                    Settings.SearchMode     = Mode.BranchAndBound;
                     Settings.DictionaryType = DictionaryType.PrefixTree;
                 }
 
-                if (args[idx + 1] == "hash")
-                {
-                    Settings.DictionaryType = DictionaryType.Hash;
-                }
+                // add more mode options here
             }
 
             idx++; // skip idx + 1 since already seen
