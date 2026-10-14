@@ -5,9 +5,9 @@ namespace BrokenKeypad;
 
 public static class Program
 {
-    private enum Mode { ExhaustiveSearch, BranchAndBound }
+    private enum Mode { ExhaustiveSearch, BranchAndBound, KeypadHash }
 
-    private enum DictionaryType { Hash, PrefixTree }
+    private enum DictionaryType { Hash, PrefixTree, KeypadHash}
 
     private static class Settings
     {
@@ -187,11 +187,17 @@ public static class Program
                     Settings.DictionaryType = DictionaryType.Hash;
                 }
 
-                if (args[idx + 1] == "branch-and-bound")
-                {
-                    Settings.SearchMode     = Mode.BranchAndBound;
-                    Settings.DictionaryType = DictionaryType.PrefixTree;
-                }
+                    if (args[idx + 1] == "branch-and-bound")
+                    {
+                        Settings.SearchMode     = Mode.BranchAndBound;
+                        Settings.DictionaryType = DictionaryType.PrefixTree;
+                    }
+
+                    if (args[idx + 1] == "keypad-hash")
+                    {
+                        Settings.SearchMode     = Mode.KeypadHash;
+                        Settings.DictionaryType = DictionaryType.Hash;
+                    }
 
                 // add more mode options here
             }
@@ -220,6 +226,10 @@ public static class Program
         else if (Settings.DictionaryType == DictionaryType.Hash)
         {
             wordBank = new Hash();
+        }
+        else if (Settings.DictionaryType == DictionaryType.KeypadHash)
+        {
+            wordBank = new KeypadHash(Settings.IntCharMap);
         }
         else
         {
