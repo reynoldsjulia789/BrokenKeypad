@@ -155,14 +155,14 @@ public static class Program
         Console.WriteLine();
         Console.WriteLine("To run:");
         Console.WriteLine("dotnet run [--filepath <path to dictionary file>] [--mode <search mode>] " +
-            "[--dictionary-type <type>] [--print-dictionary]");
+            "[--print-dictionary]");
 
         Console.WriteLine($"* all args are optional");
 
-        Console.WriteLine($"* filepath: path to .txt file containing the dictionary to use to verify word validity.");
+        Console.WriteLine($"* filepath: path to .txt file containing the dictionary to use to verify word validity");
         Console.WriteLine($"  default is {Settings.DictionaryFilepath}");
 
-        Console.WriteLine($"* mode: the mode used to lookup words.");
+        Console.WriteLine($"* mode: the mode used to lookup words");
 
         string[] options = Enum.GetNames(typeof(Mode))
             .Select(option => ToKebabCase(option))
