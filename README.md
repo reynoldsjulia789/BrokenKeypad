@@ -23,7 +23,7 @@ For example, "228" would output "cat, bat, act."
         * options include: `compare`, `exhaustive-search`, `branch-and-bound`, `keypad-hash`
         * default is `compare`
         * `branch-and-bound` uses a prefix-tree, `exhaustive-search` uses C#'s built-in hash set, and `keypad-hash` pre-processes the words to make lookups based on corresponding digits faster
-        *  `compare` mode compares the speeds of the other options
+        *  `compare` mode compares the runtimes of each of the options
     * `--print-dictionary`: if included, all the words in the dictionary being used will be printed to the 
         * note dictionary will not print if in compare mode
 
