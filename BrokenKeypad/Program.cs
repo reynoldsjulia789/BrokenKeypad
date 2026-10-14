@@ -14,13 +14,13 @@ public static class Program
         [Mode.KeypadHash]       = DictionaryType.KeypadHash,
     };
 
-    private enum DictionaryType { Hash, PrefixTree, KeypadHash}
+    private enum DictionaryType { Hash, PrefixTree, KeypadHash }
 
     private static class Settings
     {
         public static string DictionaryFilepath     = "../dictionary.txt";
-        public static Mode SearchMode               = Mode.BranchAndBound;
-        public static DictionaryType DictionaryType = DictionaryType.PrefixTree;
+        public static Mode SearchMode               = Mode.Compare;
+        public static DictionaryType DictionaryType = DictionaryType.KeypadHash;
         public static bool PrintDictionary          = false;
         public static Dictionary<int, List<char>> IntCharMap = new()
         {
@@ -173,6 +173,7 @@ public static class Program
 
         Console.WriteLine($"* print-dictionary: if included, all the words in the dictionary being used will be " +
             $"printed to the console");
+        Console.WriteLine($"  note that dictionary will not print if in compare mode");
 
         Console.ResetColor();
     }
