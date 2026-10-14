@@ -20,10 +20,12 @@ For example, "228" would output "cat, bat, act."
     * `--filepath`: path to `.txt` file containing the dictionary to use to verify word validity
         * default is `../dictionary.txt`
     * `--mode`: the mode used to lookup words
-        * options include: `exhaustive-search`, `branch-and-bound`
-        * default is `branch-and-bound`
-        * `branch-and-bound` uses a prefix-tree, `exhaustive-search` uses hashing
-    * `--print-dictionary`: if included, all the words in the dictionary being used will be printed to the console
+        * options include: `compare`, `exhaustive-search`, `branch-and-bound`, `keypad-hash`
+        * default is `compare`
+        * `branch-and-bound` uses a prefix-tree, `exhaustive-search` uses C#'s built-in hash set, and `keypad-hash` pre-processes the words to make lookups based on corresponding digits faster
+        *  `compare` mode compares the speeds of the other options
+    * `--print-dictionary`: if included, all the words in the dictionary being used will be printed to the 
+        * note dictionary will not print if in compare mode
 
 **Visual Studio:**
 1) Navigate to the folder containing the solution file (`.slnx`)
