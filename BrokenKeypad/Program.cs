@@ -1,33 +1,52 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace BrokenKeypad;
 
 public static class Program
 {
-    private enum Mode { ExhaustiveSearch, BranchAndBound }
+    private enum Mode { ExhaustiveSearch, BranchAndBound, KeypadHash, Compare }
 
-    private enum DictionaryType { Hash, PrefixTree }
+    private static readonly Dictionary<Mode, DictionaryType> ModeDictionaryTypes = new()
+    {
+        [Mode.ExhaustiveSearch] = DictionaryType.Hash,
+        [Mode.BranchAndBound]   = DictionaryType.PrefixTree,
+        [Mode.KeypadHash]       = DictionaryType.KeypadHash,
+    };
+
+    private enum DictionaryType { Hash, PrefixTree, KeypadHash }
 
     private static class Settings
     {
         public static string DictionaryFilepath     = "../dictionary.txt";
-        public static Mode SearchMode               = Mode.BranchAndBound;
-        public static DictionaryType DictionaryType = DictionaryType.PrefixTree;
+        public static Mode SearchMode               = Mode.Compare;
+        public static DictionaryType DictionaryType = DictionaryType.KeypadHash;
         public static bool PrintDictionary          = false;
+        public static Dictionary<int, List<char>> IntCharMap = new()
+        {
+            [2] = [ 'a', 'b', 'c' ],
+            [3] = [ 'd', 'e', 'f' ],
+            [4] = [ 'g', 'h', 'i' ],
+            [5] = [ 'j', 'k', 'l' ],
+            [6] = [ 'm', 'n', 'o' ],
+            [7] = [ 'p', 'q', 'r', 's' ],
+            [8] = [ 't', 'u', 'v' ],
+            [9] = [ 'w', 'x', 'y', 'z' ]
+        };
     }
     
     private static class Runtimes
     {
-        public static long DictionaryCreationTime   = -1;
-        public static long SearchTime               = -1;
-        public static long GetAllWordsTime          = -1;
-        public static long PrintAllWordsTime        = -1;
+        public static double? DictionaryCreationTime     = null;
+        public static List<double?> SearchTimes          = [];
+        public static double? GetAllWordsTime            = null;
+        public static double? PrintAllWordsTime          = null;
 
     }
+
+
+    // ---------- MAIN -----------
+
 
     public static void Main(string[] args)
     {
@@ -43,15 +62,11 @@ public static class Program
 
         IWordBank    dictionary;
         List<string> allWords;
+        string[] file;
 
         try
         {
-            stopwatch.Start();
-
-            dictionary = BuildDictionary();
-
-            stopwatch.Stop();
-            Runtimes.DictionaryCreationTime = stopwatch.ElapsedMilliseconds;
+            file = File.ReadAllLines(Settings.DictionaryFilepath);
         }
         catch (Exception caught)
         {
@@ -67,13 +82,28 @@ public static class Program
             return;
         }
 
+        if (Settings.SearchMode == Mode.Compare)
+        {
+            RunCompare(file);
+            return;
+        }
+
+        // Build Dictionary
+        stopwatch.Start();
+
+        dictionary = BuildDictionary(Settings.DictionaryType, file);
+
+        stopwatch.Stop();
+        Runtimes.DictionaryCreationTime = stopwatch.Elapsed.TotalNanoseconds;
+
         // Get All Words From Dictionary
+        stopwatch.Restart();
         stopwatch.Start();
 
         allWords = dictionary.GetAllWords();
 
         stopwatch.Stop();
-        Runtimes.GetAllWordsTime = stopwatch.ElapsedMilliseconds;
+        Runtimes.GetAllWordsTime = stopwatch.Elapsed.TotalNanoseconds;
 
         Console.WriteLine($"{Settings.DictionaryType} Dictionary built successfully with " +
             $"{allWords.Count:N0} word{((allWords.Count == 1) ? "" : "s")}");
@@ -86,15 +116,33 @@ public static class Program
             PrintDictionary(allWords);
 
             stopwatch.Stop();
-            Runtimes.PrintAllWordsTime = stopwatch.ElapsedMilliseconds;
+            Runtimes.PrintAllWordsTime = stopwatch.Elapsed.TotalNanoseconds;
         }
 
-
         // Search
+        while (true)
+        {
+            List<int> input = GetUserInput();
+
+            stopwatch.Restart();
+
+            List<string> results = dictionary.GetPossibleWords(input, Settings.IntCharMap);
+
+            stopwatch.Stop();
+            Runtimes.SearchTimes.Add(stopwatch.Elapsed.TotalNanoseconds);
+
+            PrintResults(results);
+
+            if (UserHasMoreInputs() is false) break;
+        }
 
         // Print Run Times
         PrintRuntimes();
     }
+
+
+    // ---------- ARGS -----------
+
 
     /// <summary>
     /// Prints the instructions on how to run the program.
@@ -123,17 +171,9 @@ public static class Program
         Console.WriteLine($"  options include: {string.Join(", ", options)}");
         Console.WriteLine($"  default is {ToKebabCase(Settings.SearchMode.ToString())}");
 
-        Console.WriteLine($"* dictionary-type: the data structure used to store the dictionary.");
-
-        options = Enum.GetNames(typeof(DictionaryType))
-            .Select(option => ToKebabCase(option))
-            .ToArray();
-
-        Console.WriteLine($"  options include: {string.Join(", ", options)}");
-        Console.WriteLine($"  default is {ToKebabCase(Settings.DictionaryType.ToString())}");
-
         Console.WriteLine($"* print-dictionary: if included, all the words in the dictionary being used will be " +
             $"printed to the console");
+        Console.WriteLine($"  note that dictionary will not print if in compare mode");
 
         Console.ResetColor();
     }
@@ -162,66 +202,64 @@ public static class Program
             {
                 if (args[idx + 1] == "exhaustive-search")
                 {
-                    Settings.SearchMode = Mode.ExhaustiveSearch;
+                    Settings.SearchMode     = Mode.ExhaustiveSearch;
+                    Settings.DictionaryType = DictionaryType.Hash;
                 }
 
                 if (args[idx + 1] == "branch-and-bound")
                 {
-                    Settings.SearchMode = Mode.BranchAndBound;
+                    Settings.SearchMode     = Mode.BranchAndBound;
+                    Settings.DictionaryType = DictionaryType.PrefixTree;
+                }
+
+                if (args[idx + 1] == "keypad-hash")
+                {
+                    Settings.SearchMode     = Mode.KeypadHash;
+                    Settings.DictionaryType = DictionaryType.KeypadHash;
+                }
+
+                if (args[idx + 1] == "compare")
+                {
+                    Settings.SearchMode = Mode.Compare;
                 }
 
                 // add more mode options here
             }
 
-            if (args[idx] == "--dictionary-type")
-            {
-                if (args[idx + 1] == "prefix-tree")
-                {
-                    Settings.DictionaryType = DictionaryType.PrefixTree;
-                }
-
-                if (args[idx + 1] == "hash")
-                {
-                    Settings.DictionaryType = DictionaryType.Hash;
-                }
-            }
-
             idx++; // skip idx + 1 since already seen
         }
     }
-    
+
+
+    // ---------- DICTIONARY -----------
+
+
     /// <summary>
-    /// Builds a dictionary of words from the filepath specified in settings
+    /// Builds a dictionary of words from the given dictionary file, using the specified dictionary type.
     /// </summary>
-    /// <returns>word bank with all the words in the dictionary file</returns>
-    /// <exception cref="NotImplementedException">if dictionary type is not prefix tree</exception>
-    private static IWordBank BuildDictionary()
+    /// <param name="dictionaryType"></param>
+    /// <param name="lines"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    private static IWordBank BuildDictionary(DictionaryType dictionaryType, string[] lines)
     {
-        IWordBank wordBank;
-
-        if (Settings.DictionaryType == DictionaryType.PrefixTree)
+        IWordBank wordBank = dictionaryType switch
         {
-            wordBank = new PrefixTree();
-        }
-        else if (Settings.DictionaryType == DictionaryType.Hash)
-        {
-            wordBank = new Hash();
-        }
-        else
-        {
-            throw new NotImplementedException(
-                $"Program.BuildDictionary: {Settings.DictionaryType} has not been implemented yet");
-        }
+            DictionaryType.PrefixTree => new PrefixTree(),
+            DictionaryType.Hash       => new Hash(),
+            DictionaryType.KeypadHash => new KeypadHash(Settings.IntCharMap),
+            _ => throw new NotImplementedException(
+                $"Program.BuildDictionary: {dictionaryType} has not been implemented yet")
+        };
 
-        var file = File.ReadAllLines(Settings.DictionaryFilepath);
-
-        foreach (var line in file)
+        foreach (var line in lines)
         {
             _ = wordBank.Insert(line.Split(',')[0].ToLower());
         }
 
         return wordBank;
     }
+
 
     /// <summary>
     /// Prints all the words in the given dictionary
@@ -251,6 +289,188 @@ public static class Program
         Console.WriteLine($"Word Count:          {allWords.Count:N0}");
     }
 
+    private record AlgorithmRun(Mode Mode, IWordBank Dictionary, double BuildTime, List<double> SearchTimes);
+
+    // ---------- COMPARE -----------
+
+    private static void RunCompare(string[] lines)
+    {
+        Stopwatch stopwatch = new();
+        List<AlgorithmRun> runs = [];
+
+        foreach (var (mode, dictionaryType) in ModeDictionaryTypes)
+        {
+            stopwatch.Restart();
+
+            IWordBank dictionary = BuildDictionary(dictionaryType, lines);
+
+            stopwatch.Stop();
+            runs.Add(new(mode, dictionary, stopwatch.Elapsed.TotalNanoseconds, []));
+        }
+
+        List<string> inputs = [];
+
+        while (true)
+        {
+            List<int> input = GetUserInput();
+            inputs.Add(string.Concat(input));
+
+            List<List<string>> allResults = [];
+
+            Console.WriteLine();
+            foreach (var run in runs)
+            {
+                double time = TimeSearch(run.Dictionary, input, out List<string> results);
+                run.SearchTimes.Add(time);
+                allResults.Add(results);
+
+                Console.WriteLine($"{ToKebabCase(run.Mode.ToString()),-18} ({time,10:N0} ns): " +
+                    $"{((results.Count == 0) ? "No results found" : string.Join(", ", results))}");
+            }
+
+            List<string> expected = [.. allResults[0].Order()];
+            bool allAgree = allResults.All(results => results.Order().SequenceEqual(expected));
+
+            Console.ForegroundColor = allAgree ? ConsoleColor.Green : ConsoleColor.Red;
+            Console.WriteLine(allAgree ? "All algorithms agree." : "WARNING: algorithms returned different words!");
+            Console.ResetColor();
+
+            if (UserHasMoreInputs() is false) break;
+        }
+
+        PrintCompareRuntimes(runs, inputs);
+    }
+
+
+    // ---------- USER INPUT -----------
+
+
+    /// <summary>
+    /// Reads integers entered by the user and returns them as a list.
+    /// </summary>
+    /// <returns>A list of integers entered by the user. Returns an empty list if no valid integers were provided.</returns>
+    private static List<int> GetUserInput()
+    {
+        List<int> input = [];
+
+        int low  = Settings.IntCharMap.Keys.Min();
+        int high = Settings.IntCharMap.Keys.Max();
+
+        Console.WriteLine();
+        Console.WriteLine("The following numbers correspond to the following letters.");
+
+        foreach (var mapping in Settings.IntCharMap)
+        {
+            Console.WriteLine($"* {mapping.Key} = {string.Join(", ", mapping.Value)}");
+        }
+
+        while (true)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Please enter a sequence of numbers to represent a word:");
+            Console.WriteLine("For example: the sequence 228 could represent act, bat, or cat");
+            Console.Write(">  ");
+
+            var rawInput   = Console.ReadLine()?.Trim();
+            var errorMsg   = $"Invalid input. Please only enter didgits {low}-{high}";
+            var validInput = true;
+
+            if (string.IsNullOrWhiteSpace(rawInput))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(errorMsg);
+                Console.ResetColor();
+
+                continue;
+            }
+
+            foreach (char character in rawInput)
+            {
+                if ((int.TryParse(character.ToString(), out int num) is false) || (num < low) || (num > high))
+                {
+                    input.Clear();
+
+                    validInput = false;
+
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(errorMsg);
+                    Console.ResetColor();
+
+                    break;
+                }
+
+                input.Add(num);
+            }
+
+            if (validInput is true) return input;
+        }
+    }
+
+    /// <summary>
+    /// Determines wheter the user has more sequences of numbers they would like to process
+    /// </summary>
+    /// <returns>true to continue, false to exit</returns>
+    private static bool UserHasMoreInputs()
+    {
+        while (true)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Would you like to input another sequence? (y/n)");
+            Console.Write(">  ");
+
+            var rawInput = Console.ReadLine()?.Trim();
+
+            if (string.IsNullOrWhiteSpace(rawInput)) continue;
+
+            if (rawInput[0] == 'y' || rawInput[0] == 'Y') return true;
+
+            return false;
+        }
+    }
+
+
+    // ---------- OTHER -----------
+
+    /// <returns>median search time in nanoseconds; results come back through the out parameter</returns>
+    private static double TimeSearch(IWordBank dictionary, List<int> input, out List<string> results)
+    {
+        const int Trials = 7;
+
+        // warm-up: the first call pays .NET's one-time compile cost, so it isn't timed
+        results = dictionary.GetPossibleWords(input, Settings.IntCharMap);
+
+        Stopwatch stopwatch = new();
+        List<double> times = [];
+
+        for (int trial = 0; trial < Trials; trial++)
+        {
+            stopwatch.Restart();
+            _ = dictionary.GetPossibleWords(input, Settings.IntCharMap);
+            stopwatch.Stop();
+
+            times.Add(stopwatch.Elapsed.TotalNanoseconds);
+        }
+
+        times.Sort();
+        return times[Trials / 2];
+    }
+
+
+    /// <summary>
+    /// Prints the results of a search
+    /// </summary>
+    private static void PrintResults(List<string> results)
+    {
+        Console.ForegroundColor = ConsoleColor.Green;
+
+        Console.WriteLine();
+        Console.WriteLine($"{((results.Count == 0) 
+            ? "No results found" 
+            : $"Possible words: {string.Join(", ", results)}")}");
+
+        Console.ResetColor();
+    }
+
     /// <summary>
     /// Prints available .NET runtimes and their version information to the console.
     /// </summary>
@@ -261,19 +481,36 @@ public static class Program
         string defaultTime = "Not Recorded";
 
         Console.WriteLine();
-        Console.WriteLine("Runtimes in ms:");
+        Console.WriteLine("Runtimes in nanoseconds:");
 
-        Console.WriteLine($"Build Dictionary - {((Runtimes.DictionaryCreationTime == -1) 
-            ? defaultTime : Runtimes.DictionaryCreationTime)}");
+        Console.WriteLine($"Build Dictionary - {((Runtimes.DictionaryCreationTime is null) 
+            ? defaultTime : $"{Runtimes.DictionaryCreationTime:N0}")}");
 
-        Console.WriteLine($"Get All Words    - {((Runtimes.GetAllWordsTime == -1) 
-            ? defaultTime : Runtimes.GetAllWordsTime)}");
+        Console.WriteLine($"Get All Words    - {((Runtimes.GetAllWordsTime is null) 
+            ? defaultTime : $"{Runtimes.GetAllWordsTime:N0}")}");
 
-        Console.WriteLine($"Print All Words  - {((Runtimes.PrintAllWordsTime == -1)
-            ? defaultTime : Runtimes.PrintAllWordsTime)}");
+        Console.WriteLine($"Print All Words  - {((Runtimes.PrintAllWordsTime is null)
+            ? defaultTime : $"{Runtimes.PrintAllWordsTime:N0}")}");
 
-        Console.WriteLine($"Search           - {((Runtimes.SearchTime == -1) 
-            ? defaultTime : Runtimes.SearchTime)}");
+        Console.WriteLine($"Search           - {((Runtimes.SearchTimes.Count == 0) 
+            ? defaultTime : string.Join(", ", Runtimes.SearchTimes.Select(number => number?.ToString("N0"))))}");
+    }
+
+    private static void PrintCompareRuntimes(List<AlgorithmRun> runs, List<string> inputs)
+    {
+        Console.WriteLine();
+        Console.WriteLine("Runtimes in nanoseconds (search times are the median of 7 trials):");
+
+        Console.Write($"{"Algorithm",-18} {"Build",14}");
+        foreach (string input in inputs) Console.Write($" {input,12}");
+        Console.WriteLine();
+
+        foreach (var run in runs)
+        {
+            Console.Write($"{ToKebabCase(run.Mode.ToString()),-18} {run.BuildTime,14:N0}");
+            foreach (double time in run.SearchTimes) Console.Write($" {time,12:N0}");
+            Console.WriteLine();
+        }
     }
 
     /// <summary>
