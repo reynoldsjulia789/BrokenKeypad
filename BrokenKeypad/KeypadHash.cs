@@ -55,7 +55,7 @@ public class KeypadHash : IWordBank
 
         // query the hash map for that sequence
         // return the list of words if found, or an empty list if not found.
-        if (hashMap.TryGetValue(digitSequence.ToString(), out List<string> words))
+        if (hashMap.TryGetValue(digitSequence.ToString(), out List<string>? words))
         {
             return words;
         }
@@ -81,7 +81,7 @@ public class KeypadHash : IWordBank
         }
 
         //TryGetValue for key/value pair
-        if (!hashMap.TryGetValue(digitSequence.ToString(), out List<string> words))
+        if (!hashMap.TryGetValue(digitSequence.ToString(), out List<string>? words))
         {
             //if not key, make new list and add word to it
             words = new List<string>();
@@ -112,7 +112,7 @@ public class KeypadHash : IWordBank
         }
 
         //check if digit sequence is in hashMap
-        if (hashMap.TryGetValue(digitSequence.ToString(), out List<string> words))
+        if (hashMap.TryGetValue(digitSequence.ToString(), out List<string>? words))
         {
             //if digit sequence is in hashMap, check if word is in list of words for that sequence
             return words.Contains(word);
